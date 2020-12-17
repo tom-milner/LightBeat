@@ -147,10 +147,6 @@ func Authorize(tokenFile string) bool {
 	return true
 }
 
-func refreshAccessToken() {
-
-}
-
 func getAccessToken(refreshToken string) models.SpotifyToken {
 	log.Println("Fetching new access token")
 	body := url.Values{
