@@ -7,6 +7,7 @@ type CurrentlyPlaying struct {
 	Item      struct {
 		Duration int    `json:"duration_ms"` // The duration of the song.
 		ID       string `json:"id"`          // The Spotify ID of the song.
+		Name     string `json:"name"`
 	} `json:"item"`
 }
 
@@ -18,6 +19,11 @@ type TrackAnalysis struct {
 	Track  struct {
 		Duration float64 `json:"duration"` // The duration of the track.
 	} `json:"track"`
+}
+
+type SpotifyToken struct {
+	Refresh string `json:"refresh_token"`
+	Access  string `json:"access_token"`
 }
 
 type timeInterval struct {

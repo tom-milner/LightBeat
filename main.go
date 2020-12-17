@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"main/spotify"
 	"time"
 
@@ -9,9 +10,18 @@ import (
 )
 
 func main() {
+
+	// Authenticate with spotify API.
+	tokenFile := "tokens.json"
+	if !spotify.Authorize(tokenFile) {
+		log.Fatal("Failed to authorize spotify wrapper")
+	}
+
+	// Get track data.
 	currPlay := spotify.GetCurrentlyPlaying()
 	trackAn := spotify.GetTrackAnalysis(currPlay.Item.ID)
 
+	fmt.Println(currPlay.Item.Name)
 	// Calculate when to show the first beat.
 	triggers := trackAn.Beats
 	spew.Dump(triggers[0])

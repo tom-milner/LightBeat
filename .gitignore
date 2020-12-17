@@ -1,3 +1,5 @@
 LightBeatSim
 .idea
 .DS_Store
+credentials.go
+tokens.json
