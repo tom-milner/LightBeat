@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"main/spotify"
+	"main/spotify/models"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -17,11 +18,25 @@ func main() {
 		log.Fatal("Failed to authorize spotify wrapper")
 	}
 
-	// Get track data.
-	currPlay := spotify.GetCurrentlyPlaying()
+	log.Println("Starting ticker")
+	// Check for a song every 2 seconds.
+	ticker := time.NewTicker(2 * time.Second)
+	for {
+		<-ticker.C
+		currPlay := spotify.GetCurrentlyPlaying()
+		if currPlay.IsPlaying {
+			detectBeats(currPlay)
+		}
+	}
+
+}
+
+func detectBeats(currPlay models.CurrentlyPlaying) {
+	log.Println("Trackin beats.")
 	trackAn := spotify.GetTrackAnalysis(currPlay.Item.ID)
 
 	fmt.Println(currPlay.Item.Name)
+
 	// Calculate when to show the first beat.
 	triggers := trackAn.Beats
 	spew.Dump(triggers[0])
@@ -51,8 +66,7 @@ func main() {
 	}
 }
 
+// Function to run on every beat.
 func onTrigger(triggerNum int) {
-
 	fmt.Println("Trigger:", triggerNum)
-
 }

@@ -2,8 +2,9 @@ package models
 
 // CurrentlyPlaying is the model to contain the response from the spotify currently-playing endpoint.
 type CurrentlyPlaying struct {
-	Timestamp int `json:"timestamp"`   // The time we made the request.
-	Progress  int `json:"progress_ms"` // How far through the song we are.
+	Timestamp int  `json:"timestamp"`   // The time we made the request.
+	Progress  int  `json:"progress_ms"` // How far through the song we are.
+	IsPlaying bool `json:"is_playing"`  // Whether the song is currently playing or not.
 	Item      struct {
 		Duration int    `json:"duration_ms"` // The duration of the song.
 		ID       string `json:"id"`          // The Spotify ID of the song.

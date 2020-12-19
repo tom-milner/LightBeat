@@ -56,7 +56,7 @@ func GetTrackAnalysis(trackID string) models.TrackAnalysis {
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
-	if res.StatusCode != 200 {
+	if !(res.StatusCode < 300 && res.StatusCode > 100) {
 		log.Fatal(res.Status)
 	}
 
@@ -86,12 +86,16 @@ func GetCurrentlyPlaying() models.CurrentlyPlaying {
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
-	if res.StatusCode != 200 {
+	if !(res.StatusCode < 300 && res.StatusCode > 100) {
 		log.Fatal(res.Status)
 	}
 
-	// Decode the data.
 	var currPlay models.CurrentlyPlaying
+	if res.StatusCode == 204 {
+		return currPlay
+	}
+
+	// Decode the data.
 	if err := json.NewDecoder(res.Body).Decode(&currPlay); err != nil {
 		log.Fatal(err)
 	}
@@ -100,6 +104,7 @@ func GetCurrentlyPlaying() models.CurrentlyPlaying {
 
 func saveRefreshToken(refreshToken string, tokenFile string) bool {
 
+	log.Println("Saving Token")
 	jsonFile, err := os.Create(tokenFile)
 	if err != nil {
 		log.Println(err)
@@ -195,6 +200,7 @@ func getSpotifyToken(body url.Values) models.SpotifyToken {
 	if err := json.NewDecoder(res.Body).Decode(&tokenPair); err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Token pair fetched successfully")
 	return tokenPair
 }
 
