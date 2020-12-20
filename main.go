@@ -9,6 +9,7 @@ import (
 	"main/iot/topics"
 	"main/spotify"
 	"main/spotify/models"
+	"math"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -43,7 +44,8 @@ func main() { // Setup
 func run() {
 	log.Println("Starting ticker")
 	lastPlaying := spotify.GetCurrentlyPlaying()
-	ticker := time.NewTicker(2 * time.Second)
+	tickerInterval := 2 * time.Second
+	ticker := time.NewTicker(tickerInterval)
 	var beatContex context.Context
 	var cancel context.CancelFunc
 	isDetecting := false
@@ -52,17 +54,25 @@ func run() {
 		<-ticker.C
 		currPlay := spotify.GetCurrentlyPlaying()
 
+		// Whether the media has stopped or started playing.
 		changeInPlayState := lastPlaying.IsPlaying != currPlay.IsPlaying
+
+		// Whether the playing media has changed.
 		changeInMedia := lastPlaying.Item.ID != currPlay.Item.ID
+
+		// Whether the progress of the media has been changed by more than it should've in the given time interval
+		progressChanged := math.Abs(float64(currPlay.Progress-lastPlaying.Progress)) > float64((tickerInterval/time.Millisecond)+time.Second) // +1 second *just to be sure*
+
+		// Whether media is playing, but we aren't running the beat detector.
 		playingWithoutDetection := (!isDetecting && currPlay.IsPlaying)
 
-		if ((changeInPlayState && !currPlay.IsPlaying) || changeInMedia) && !playingWithoutDetection {
+		if ((changeInPlayState && !currPlay.IsPlaying) || changeInMedia || progressChanged) && !playingWithoutDetection {
 			log.Println("Stopping")
 			cancel()
 			isDetecting = false
 		}
 
-		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia) || playingWithoutDetection {
+		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection {
 			log.Println("Starting")
 			beatContex, cancel = context.WithCancel(context.Background())
 			go detectBeats(beatContex, currPlay)
@@ -74,7 +84,7 @@ func run() {
 }
 
 func detectBeats(ctx context.Context, currPlay models.Media) {
-	log.Println("Trackin beats.")
+	log.Println("Tracking beats.")
 	mediaAnalysis := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
 
 	b, _ := json.Marshal(currPlay)
