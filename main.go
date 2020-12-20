@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"main/iot"
+	"main/iot/topics"
 	"main/spotify"
 	"main/spotify/models"
 	"time"
@@ -11,7 +14,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func main() {
+func main() { // Setup
 
 	// Authenticate with spotify API.
 	tokenFile := "tokens.json"
@@ -19,8 +22,26 @@ func main() {
 		log.Fatal("Failed to authorize spotify wrapper")
 	}
 
-	log.Println("Starting ticker")
+	// Connect to MQTT broker
+	broker := iot.MQTTBroker{
+		Address: "localhost",
+		Port:    "1883",
+	}
+	info := iot.MQTTConnInfo{
+		ClientID: "LightBeatGateway",
+		Broker:   broker,
+	}
 
+	_, err := iot.ConnectToMQTTBroker(info)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	run()
+}
+
+func run() {
+	log.Println("Starting ticker")
 	lastPlaying := spotify.GetCurrentlyPlaying()
 	ticker := time.NewTicker(2 * time.Second)
 	var beatContex context.Context
@@ -34,11 +55,6 @@ func main() {
 		changeInPlayState := lastPlaying.IsPlaying != currPlay.IsPlaying
 		changeInMedia := lastPlaying.Item.ID != currPlay.Item.ID
 		playingWithoutDetection := (!isDetecting && currPlay.IsPlaying)
-
-		// log.Println("changeInPlayState: ", changeInPlayState)
-		// log.Println("changeInMedia: ", changeInMedia)
-		// log.Println("playingWithoutDetection: ", playingWithoutDetection)
-		// log.Println()
 
 		if ((changeInPlayState && !currPlay.IsPlaying) || changeInMedia) && !playingWithoutDetection {
 			log.Println("Stopping")
@@ -55,12 +71,14 @@ func main() {
 
 		lastPlaying = currPlay
 	}
-
 }
 
-func detectBeats(ctx context.Context, currPlay models.CurrentlyPlaying) {
+func detectBeats(ctx context.Context, currPlay models.Media) {
 	log.Println("Trackin beats.")
 	trackAn := spotify.GetTrackAnalysis(currPlay.Item.ID)
+
+	b, _ := json.Marshal(currPlay)
+	go iot.SendMessage(topics.NewMedia, b)
 
 	fmt.Println(currPlay.Item.Name)
 
@@ -100,5 +118,7 @@ func detectBeats(ctx context.Context, currPlay models.CurrentlyPlaying) {
 
 // Function to run on every beat.
 func onTrigger(triggerNum int) {
-	fmt.Println("Trigger:", triggerNum)
+	message := fmt.Sprintf("Trigger: %d", triggerNum)
+	iot.SendMessage(topics.Beat, message)
+	log.Println(message)
 }

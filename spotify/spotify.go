@@ -10,7 +10,6 @@ import (
 	"main/spotify/models"
 	"main/spotify/urls"
 	"main/utils"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,7 +18,6 @@ import (
 )
 
 var spotifyToken models.SpotifyToken
-var localIP net.IP
 
 // buildAPIRequest returns a request that has the spotify token stored in the params.
 func buildAPIRequest(method string, url string, body io.Reader) (*http.Client, *http.Request, error) {
@@ -92,7 +90,7 @@ func GetTrackAnalysis(trackID string) models.TrackAnalysis {
 }
 
 // GetCurrentlyPlaying gets the currently-playing media from spotify.
-func GetCurrentlyPlaying() models.CurrentlyPlaying {
+func GetCurrentlyPlaying() models.Media {
 
 	// Make the request.
 	client, req, err := buildAPIRequest("GET", urls.CurrentlyPlaying, nil)
@@ -113,7 +111,7 @@ func GetCurrentlyPlaying() models.CurrentlyPlaying {
 		log.Fatal(res.Status)
 	}
 
-	var currPlay models.CurrentlyPlaying
+	var currPlay models.Media
 	if res.StatusCode == 204 {
 		return currPlay
 	}

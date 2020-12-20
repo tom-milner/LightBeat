@@ -1,7 +1,7 @@
 package models
 
-// CurrentlyPlaying is the model to contain the response from the spotify currently-playing endpoint.
-type CurrentlyPlaying struct {
+// Media is the model to contain the response from the spotify currently-playing endpoint.
+type Media struct {
 	Timestamp int  `json:"timestamp"`   // The time we made the request.
 	Progress  int  `json:"progress_ms"` // How far through the song we are.
 	IsPlaying bool `json:"is_playing"`  // Whether the song is currently playing or not.
