@@ -38,6 +38,28 @@ func buildAPIRequest(method string, url string, body io.Reader) (*http.Client, *
 	return client, req, err
 }
 
+// This function makes the http request. Here is where we can add any global response interceptors (similar to javascript axios interceptors)
+// There's probably a nicer way to add interceptors. For now, this'll do.
+func makeSpotifyRequest(client *http.Client, req *http.Request) (*http.Response, error) {
+
+	// Make the request.
+	res, err := client.Do(req)
+
+	// Check if we need to refresh the access token.
+	if res.StatusCode == 401 {
+		log.Println("Access code invalid. Refreshing.")
+		// Refresh the access token
+		spotifyToken = getAccessToken(spotifyToken.Refresh)
+
+		// Retry the original request.
+		req.Header.Set("Authorization", "Bearer "+spotifyToken.Access)
+		res, err = makeSpotifyRequest(client, req)
+	}
+
+	return res, err
+
+}
+
 // GetTrackAnalysis fetches the spotify audio analysis of the supplied track.
 func GetTrackAnalysis(trackID string) models.TrackAnalysis {
 
@@ -47,7 +69,7 @@ func GetTrackAnalysis(trackID string) models.TrackAnalysis {
 		log.Fatal(err)
 	}
 
-	res, err := client.Do(req)
+	res, err := makeSpotifyRequest(client, req)
 
 	// Error checks
 	if err != nil {
@@ -77,7 +99,7 @@ func GetCurrentlyPlaying() models.CurrentlyPlaying {
 		log.Fatal(err)
 	}
 
-	res, err := client.Do(req)
+	res, err := makeSpotifyRequest(client, req)
 
 	// Error checks
 	if err != nil {
@@ -149,6 +171,7 @@ func Authorize(tokenFile string) bool {
 		log.Println("Refresh token found.")
 		spotifyToken = getAccessToken(refreshToken)
 	}
+
 	return true
 }
 
@@ -183,7 +206,7 @@ func getSpotifyToken(body url.Values) models.SpotifyToken {
 	req.SetBasicAuth(credentials.ClientID, credentials.ClientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := client.Do(req)
+	res, err := makeSpotifyRequest(client, req)
 
 	// Error checks
 	if err != nil {

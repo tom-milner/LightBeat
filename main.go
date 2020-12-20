@@ -25,57 +25,36 @@ func main() {
 	ticker := time.NewTicker(2 * time.Second)
 	var beatContex context.Context
 	var cancel context.CancelFunc
-	isPlaying := lastPlaying.IsPlaying
 	isDetecting := false
 
 	for {
 		<-ticker.C
 		currPlay := spotify.GetCurrentlyPlaying()
 
-		// If there has been a change in play state
-		if currPlay.IsPlaying != isPlaying {
-			log.Println("Change in play state")
-			isPlaying = currPlay.IsPlaying
-			if currPlay.IsPlaying {
-				log.Println("Starting")
-				beatContex, cancel = context.WithCancel(context.Background())
-				go detectBeats(beatContex, currPlay)
-				isDetecting = true
-			} else {
-				log.Println("Stopping")
-				cancel()
-				isDetecting = false
-				continue
-			}
+		changeInPlayState := lastPlaying.IsPlaying != currPlay.IsPlaying
+		changeInMedia := lastPlaying.Item.ID != currPlay.Item.ID
+		playingWithoutDetection := (!isDetecting && currPlay.IsPlaying)
+
+		// log.Println("changeInPlayState: ", changeInPlayState)
+		// log.Println("changeInMedia: ", changeInMedia)
+		// log.Println("playingWithoutDetection: ", playingWithoutDetection)
+		// log.Println()
+
+		if ((changeInPlayState && !currPlay.IsPlaying) || changeInMedia) && !playingWithoutDetection {
+			log.Println("Stopping")
+			cancel()
+			isDetecting = false
 		}
 
-		playButNotDetect := (!isDetecting && currPlay.IsPlaying)
-		// If there has been a change in media
-		if currPlay.Item.ID != lastPlaying.Item.ID || playButNotDetect {
-
-			if !playButNotDetect {
-				log.Println("Change in media")
-				cancel()
-			} else {
-				log.Println("Playing without detection")
-			}
+		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia) || playingWithoutDetection {
+			log.Println("Starting")
 			beatContex, cancel = context.WithCancel(context.Background())
 			go detectBeats(beatContex, currPlay)
-			lastPlaying = currPlay
 			isDetecting = true
-			log.Println("Starting")
 		}
 
+		lastPlaying = currPlay
 	}
-	// Check for a song every 2 seconds.
-
-	// for {
-	// 	<-ticker.C
-	// 	currPlay := spotify.GetCurrentlyPlaying()
-	// 	if currPlay.IsPlaying {
-	// 		detectBeats(currPlay)
-	// 	}
-	// }
 
 }
 
