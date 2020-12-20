@@ -9,6 +9,7 @@ import (
 	"main/spotify/credentials"
 	"main/spotify/models"
 	"main/spotify/urls"
+	"main/utils"
 	"net"
 	"net/http"
 	"net/url"
@@ -164,7 +165,7 @@ func Authorize(tokenFile string) bool {
 	refreshToken, err := loadRefreshToken(tokenFile)
 	if err != nil {
 		log.Println(err)
-		code, redirectURI := getAuthCode()
+		code, redirectURI := fetchAuthCode()
 		spotifyToken = getRefreshAndAccessToken(code, redirectURI)
 		saveRefreshToken(spotifyToken.Refresh, tokenFile)
 	} else {
@@ -181,7 +182,7 @@ func getAccessToken(refreshToken string) models.SpotifyToken {
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {refreshToken},
 	}
-	tokens := getSpotifyToken(body)
+	tokens := fetchSpotifyTokens(body)
 	tokens.Refresh = refreshToken
 	return tokens
 }
@@ -194,10 +195,10 @@ func getRefreshAndAccessToken(code string, redirectURI string) models.SpotifyTok
 		"redirect_uri": {redirectURI},
 	}
 
-	tokens := getSpotifyToken(body)
+	tokens := fetchSpotifyTokens(body)
 	return tokens
 }
-func getSpotifyToken(body url.Values) models.SpotifyToken {
+func fetchSpotifyTokens(body url.Values) models.SpotifyToken {
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -227,14 +228,14 @@ func getSpotifyToken(body url.Values) models.SpotifyToken {
 	return tokenPair
 }
 
-func getAuthCode() (string, string) {
+func fetchAuthCode() (string, string) {
 
 	// The use must visit this link to authenticate spotify for the first time.
 	u, err := url.Parse(urls.Code)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ip := getOutboundIP().String()
+	ip := utils.GetOutboundIP().String()
 	serverPort := "8080"
 	serverAddress := "http://" + ip + ":" + serverPort
 	redirectURI := serverAddress + "/code"
@@ -277,17 +278,4 @@ func getAuthCode() (string, string) {
 	log.Println("Code received, server shutdown.")
 
 	return accessCode, redirectURI
-}
-
-// Get preferred outbound ip of this machine
-func getOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
 }
