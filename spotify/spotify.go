@@ -59,10 +59,9 @@ func makeSpotifyRequest(client *http.Client, req *http.Request) (*http.Response,
 
 }
 
-// GetTrackAnalysis fetches the spotify audio analysis of the supplied track.
-func GetTrackAnalysis(trackID string) models.TrackAnalysis {
-
-	client, req, err := buildAPIRequest("GET", urls.TrackAnalysis+"/"+trackID, nil)
+// GetMediaAudioFeatures gets the audio features of given media
+func GetMediaAudioFeatures(trackID string) models.MediaAudioFeatures {
+	client, req, err := buildAPIRequest("GET", urls.MediaAudioFeatures+"/"+trackID, nil)
 
 	if err != nil {
 		log.Fatal(err)
@@ -82,7 +81,37 @@ func GetTrackAnalysis(trackID string) models.TrackAnalysis {
 	}
 
 	// Decode the data.
-	var trackAn models.TrackAnalysis
+	var audioFeatures models.MediaAudioFeatures
+	if err := json.NewDecoder(res.Body).Decode(&audioFeatures); err != nil {
+		log.Fatal(err)
+	}
+	return audioFeatures
+}
+
+// GetMediaAudioAnalysis fetches the spotify audio analysis of the supplied track.
+func GetMediaAudioAnalysis(trackID string) models.MediaAudioAnalysis {
+
+	client, req, err := buildAPIRequest("GET", urls.MediaAudioAnalysis+"/"+trackID, nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := makeSpotifyRequest(client, req)
+
+	// Error checks
+	if err != nil {
+		log.Fatal(err)
+	}
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+	if !(res.StatusCode < 300 && res.StatusCode > 100) {
+		log.Fatal(res.Status)
+	}
+
+	// Decode the data.
+	var trackAn models.MediaAudioAnalysis
 	if err := json.NewDecoder(res.Body).Decode(&trackAn); err != nil {
 		log.Fatal(err)
 	}

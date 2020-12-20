@@ -1,6 +1,7 @@
 package topics
 
 const (
-	Beat     string = "beat"
-	NewMedia string = "new-media"
+	Beat          string = "beat"
+	NewMedia      string = "new-media"
+	MediaFeatures string = "media-features"
 )

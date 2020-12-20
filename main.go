@@ -75,15 +75,19 @@ func run() {
 
 func detectBeats(ctx context.Context, currPlay models.Media) {
 	log.Println("Trackin beats.")
-	trackAn := spotify.GetTrackAnalysis(currPlay.Item.ID)
+	mediaAnalysis := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
 
 	b, _ := json.Marshal(currPlay)
 	go iot.SendMessage(topics.NewMedia, b)
 
+	mediaFeatures := spotify.GetMediaAudioFeatures(currPlay.Item.ID)
+	b, _ = json.Marshal(mediaFeatures)
+	go iot.SendMessage(topics.MediaFeatures, b)
+
 	fmt.Println(currPlay.Item.Name)
 
 	// Calculate when to show the first beat.
-	triggers := trackAn.Beats
+	triggers := mediaAnalysis.Beats
 	spew.Dump(triggers[0])
 
 	numTriggers := len(triggers)
@@ -119,6 +123,6 @@ func detectBeats(ctx context.Context, currPlay models.Media) {
 // Function to run on every beat.
 func onTrigger(triggerNum int) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
-	iot.SendMessage(topics.Beat, message)
+	go iot.SendMessage(topics.Beat, message)
 	log.Println(message)
 }

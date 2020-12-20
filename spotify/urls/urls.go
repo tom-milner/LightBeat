@@ -13,6 +13,8 @@ const (
 	// CurrentlyPlaying is the currently-playing endpoint.
 	CurrentlyPlaying string = _APIBase + "/me/player/currently-playing"
 
-	// TrackAnalysis is the endpoint for getting the audio analysis of a track.
-	TrackAnalysis string = _APIBase + "/audio-analysis"
+	// MediaAudioAnalysis is the endpoint for getting the audio analysis of a track.
+	MediaAudioAnalysis string = _APIBase + "/audio-analysis"
+
+	MediaAudioFeatures string = _APIBase + "/audio-features"
 )
