@@ -143,6 +143,7 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 		case <-ticker.C:
 			onTrigger(nextTrigger, triggerDuration)
 			nextTrigger++
+			triggerDuration = time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
 			ticker = time.NewTicker(triggerDuration)
 		case <-ctx.Done():
 			log.Println("Heard cancel. Exiting")

@@ -31,7 +31,7 @@ func FlashSequence(color string, fullTime time.Duration, forward bool) {
 		i = 0
 	} else {
 		incr = -1
-		i = numPixels
+		i = numPixels - 1
 	}
 
 	for c := 0; c < numPixels; c++ {
