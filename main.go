@@ -16,6 +16,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+const enableHardware bool = false
+
 func main() { // Setup
 
 	// Authenticate with spotify API.
@@ -26,7 +28,7 @@ func main() { // Setup
 
 	// Connect to MQTT broker
 	broker := iot.MQTTBroker{
-		Address: "192.168.1.137",
+		Address: "raspberrypi.local",
 		Port:    "1883",
 	}
 	info := iot.MQTTConnInfo{
@@ -35,8 +37,9 @@ func main() { // Setup
 	}
 
 	// Flash Blinkt.
-	hardware.SetupLights()
-
+	if enableHardware {
+		hardware.SetupLights()
+	}
 	_, err := iot.ConnectToMQTTBroker(info)
 	if err != nil {
 		log.Fatal(err)
@@ -150,5 +153,6 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 func onTrigger(triggerNum int) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
 	go iot.SendMessage(topics.Beat, message)
+	go hardware.FlashLights()
 	log.Println(message)
 }
