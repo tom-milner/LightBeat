@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"main/hardware"
 	"main/iot"
 	"main/iot/topics"
 	"main/spotify"
@@ -32,6 +33,9 @@ func main() { // Setup
 		ClientID: "LightBeatGateway",
 		Broker:   broker,
 	}
+
+	// Flash Blinkt.
+	hardware.SetupLights()
 
 	_, err := iot.ConnectToMQTTBroker(info)
 	if err != nil {

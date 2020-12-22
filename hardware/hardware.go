@@ -5,5 +5,7 @@ import (
 )
 
 func SetupLights() {
-	myBlinkt := blinkt.NewBlinkt(1.0)
+	bl := blinkt.NewBlinkt()
+	bl.Setup()
+	bl.ShowInitialAnim()
 }
