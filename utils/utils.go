@@ -26,6 +26,6 @@ func GenRandomHexCode() string {
 	for i := 0; i < 3; i++ {
 		code += fmt.Sprintf("%02X", rand.Intn(255))
 	}
-	fmt.Println(code)
+	// fmt.Println(code)
 	return code
 }

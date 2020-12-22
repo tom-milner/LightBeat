@@ -10,6 +10,7 @@ import (
 	"main/iot/topics"
 	"main/spotify"
 	"main/spotify/models"
+	"main/utils"
 	"math"
 	"runtime"
 	"time"
@@ -37,7 +38,7 @@ func main() { // Setup
 		Broker:   broker,
 	}
 
-	// Flash Blinkt.
+	// Setup Blinkt.
 	if enableHardware {
 		hardware.SetupLights()
 	}
@@ -135,13 +136,14 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 	fmt.Printf("Trigger: %v\n", nextTrigger)
 	fmt.Printf("numTriggers: %v\n", numTriggers)
 
-	ticker := time.NewTicker(time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond)
+	triggerDuration := time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
+	ticker := time.NewTicker(triggerDuration)
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:
-			onTrigger(nextTrigger)
+			onTrigger(nextTrigger, triggerDuration)
 			nextTrigger++
-			ticker = time.NewTicker(time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond)
+			ticker = time.NewTicker(triggerDuration)
 		case <-ctx.Done():
 			log.Println("Heard cancel. Exiting")
 			return
@@ -150,11 +152,12 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 }
 
 // Function to run on every beat.
-func onTrigger(triggerNum int) {
+func onTrigger(triggerNum int, triggerDuration time.Duration) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
 	go iot.SendMessage(topics.Beat, message)
 	if enableHardware {
-		go hardware.FlashLights()
+		go hardware.FlashSequence(utils.GenRandomHexCode(), triggerDuration, triggerNum^1 != 0)
+
 	}
 	log.Println(message)
 }
