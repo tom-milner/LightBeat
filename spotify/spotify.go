@@ -3,6 +3,7 @@ package spotify
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -22,7 +23,7 @@ var spotifyToken models.SpotifyToken
 // buildAPIRequest returns a request that has the spotify token stored in the params.
 func buildAPIRequest(method string, url string, body io.Reader) (*http.Client, *http.Request, error) {
 	client := &http.Client{
-		Timeout: time.Second * 10, // 10 second timeout.
+		Timeout: time.Second * 5, // 10 second timeout.
 	}
 
 	req, err := http.NewRequest(method, url, body)
@@ -60,96 +61,102 @@ func makeSpotifyRequest(client *http.Client, req *http.Request) (*http.Response,
 }
 
 // GetMediaAudioFeatures gets the audio features of given media
-func GetMediaAudioFeatures(trackID string) models.MediaAudioFeatures {
+func GetMediaAudioFeatures(trackID string) (models.MediaAudioFeatures, error) {
+
+	var audioFeatures models.MediaAudioFeatures
+
 	client, req, err := buildAPIRequest("GET", urls.MediaAudioFeatures+"/"+trackID, nil)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return audioFeatures, err
 	}
 
 	res, err := makeSpotifyRequest(client, req)
 
 	// Error checks
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return audioFeatures, err
 	}
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
 	if !(res.StatusCode < 300 && res.StatusCode > 100) {
-		log.Fatal(res.Status)
+		log.Println(res.Status)
+		return audioFeatures, errors.New(res.Status)
 	}
 
 	// Decode the data.
-	var audioFeatures models.MediaAudioFeatures
-	if err := json.NewDecoder(res.Body).Decode(&audioFeatures); err != nil {
-		log.Fatal(err)
-	}
-	return audioFeatures
+	err = json.NewDecoder(res.Body).Decode(&audioFeatures)
+	return audioFeatures, err
 }
 
 // GetMediaAudioAnalysis fetches the spotify audio analysis of the supplied track.
-func GetMediaAudioAnalysis(trackID string) models.MediaAudioAnalysis {
+func GetMediaAudioAnalysis(trackID string) (models.MediaAudioAnalysis, error) {
+
+	var trackAn models.MediaAudioAnalysis
 
 	client, req, err := buildAPIRequest("GET", urls.MediaAudioAnalysis+"/"+trackID, nil)
-
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return trackAn, err
 	}
 
 	res, err := makeSpotifyRequest(client, req)
 
 	// Error checks
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return trackAn, err
 	}
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
 	if !(res.StatusCode < 300 && res.StatusCode > 100) {
-		log.Fatal(res.Status)
+		log.Println(res.Status)
+		return trackAn, errors.New(res.Status)
 	}
 
 	// Decode the data.
-	var trackAn models.MediaAudioAnalysis
-	if err := json.NewDecoder(res.Body).Decode(&trackAn); err != nil {
-		log.Fatal(err)
-	}
-	return trackAn
+	err = json.NewDecoder(res.Body).Decode(&trackAn)
+	return trackAn, err
 }
 
 // GetCurrentlyPlaying gets the currently-playing media from spotify.
-func GetCurrentlyPlaying() models.Media {
+func GetCurrentlyPlaying() (models.Media, error) {
+	// TODO: better error handling!
+	var currPlay models.Media
 
 	// Make the request.
 	client, req, err := buildAPIRequest("GET", urls.CurrentlyPlaying, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return currPlay, err
 	}
 
 	res, err := makeSpotifyRequest(client, req)
 
 	// Error checks
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return currPlay, err
 	}
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
 	if !(res.StatusCode < 300 && res.StatusCode > 100) {
-		log.Fatal(res.Status)
+		log.Println(res.Status)
+		return currPlay, errors.New(res.Status)
 	}
 
-	var currPlay models.Media
 	if res.StatusCode == 204 {
-		return currPlay
+		return currPlay, nil
 	}
 
 	// Decode the data.
-	if err := json.NewDecoder(res.Body).Decode(&currPlay); err != nil {
-		log.Fatal(err)
-	}
-	return currPlay
+	err = json.NewDecoder(res.Body).Decode(&currPlay)
+	return currPlay, err
 }
 
 func saveRefreshToken(refreshToken string, tokenFile string) bool {

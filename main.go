@@ -25,7 +25,7 @@ func main() { // Setup
 
 	// Connect to MQTT broker
 	broker := iot.MQTTBroker{
-		Address: "localhost",
+		Address: "192.168.1.137",
 		Port:    "1883",
 	}
 	info := iot.MQTTConnInfo{
@@ -43,7 +43,7 @@ func main() { // Setup
 
 func run() {
 	log.Println("Starting ticker")
-	lastPlaying := spotify.GetCurrentlyPlaying()
+	lastPlaying, _ := spotify.GetCurrentlyPlaying()
 	tickerInterval := 2 * time.Second
 	ticker := time.NewTicker(tickerInterval)
 	var beatContex context.Context
@@ -52,7 +52,10 @@ func run() {
 
 	for {
 		<-ticker.C
-		currPlay := spotify.GetCurrentlyPlaying()
+		currPlay, _ := spotify.GetCurrentlyPlaying()
+		if currPlay.Item.ID == "" {
+			continue
+		}
 
 		// Whether the media has stopped or started playing.
 		changeInPlayState := lastPlaying.IsPlaying != currPlay.IsPlaying
@@ -61,7 +64,7 @@ func run() {
 		changeInMedia := lastPlaying.Item.ID != currPlay.Item.ID
 
 		// Whether the progress of the media has been changed by more than it should've in the given time interval
-		progressChanged := math.Abs(float64(currPlay.Progress-lastPlaying.Progress)) > float64((tickerInterval/time.Millisecond)+time.Second) // +1 second *just to be sure*
+		progressChanged := math.Abs(float64(currPlay.Progress-lastPlaying.Progress)) > float64((tickerInterval/time.Millisecond)+time.Second) // +1 second *just to be sure*L
 
 		// Whether media is playing, but we aren't running the beat detector.
 		playingWithoutDetection := (!isDetecting && currPlay.IsPlaying)
@@ -75,7 +78,24 @@ func run() {
 		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection {
 			log.Println("Starting")
 			beatContex, cancel = context.WithCancel(context.Background())
-			go detectBeats(beatContex, currPlay)
+
+			mediaAnalysis, err := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
+			if err != nil {
+				continue
+			}
+			spew.Dump(mediaAnalysis)
+			b, _ := json.Marshal(currPlay)
+			go iot.SendMessage(topics.NewMedia, b)
+
+			mediaFeatures, err := spotify.GetMediaAudioFeatures(currPlay.Item.ID)
+			if err != nil {
+				continue
+			}
+			b, _ = json.Marshal(mediaFeatures)
+			go iot.SendMessage(topics.MediaFeatures, b)
+			spew.Dump(mediaFeatures)
+
+			go triggerBeats(beatContex, currPlay, mediaAnalysis)
 			isDetecting = true
 		}
 
@@ -83,16 +103,8 @@ func run() {
 	}
 }
 
-func detectBeats(ctx context.Context, currPlay models.Media) {
+func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis models.MediaAudioAnalysis) {
 	log.Println("Tracking beats.")
-	mediaAnalysis := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
-
-	b, _ := json.Marshal(currPlay)
-	go iot.SendMessage(topics.NewMedia, b)
-
-	mediaFeatures := spotify.GetMediaAudioFeatures(currPlay.Item.ID)
-	b, _ = json.Marshal(mediaFeatures)
-	go iot.SendMessage(topics.MediaFeatures, b)
 
 	fmt.Println(currPlay.Item.Name)
 
