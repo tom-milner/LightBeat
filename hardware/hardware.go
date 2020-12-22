@@ -1,6 +1,8 @@
 package hardware
 
 import (
+	"main/utils"
+
 	"github.com/ikester/blinkt"
 )
 
@@ -13,5 +15,5 @@ func SetupLights() {
 }
 
 func FlashLights() {
-	bl.FlashAll(1, "FFCC66")
+	bl.FlashAll(1, utils.GenRandomHexCode())
 }

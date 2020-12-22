@@ -84,6 +84,7 @@ func run() {
 
 		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection {
 			log.Println("Starting")
+
 			beatContex, cancel = context.WithCancel(context.Background())
 
 			mediaAnalysis, err := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
@@ -151,6 +152,8 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 func onTrigger(triggerNum int) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
 	go iot.SendMessage(topics.Beat, message)
-	go hardware.FlashLights()
+	if enableHardware {
+		go hardware.FlashLights()
+	}
 	log.Println(message)
 }

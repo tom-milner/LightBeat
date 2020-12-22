@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"net"
 )
 
@@ -16,4 +18,13 @@ func GetOutboundIP() net.IP {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	return localAddr.IP
+}
+
+//GenRandomHexCode generates a random 6-digit hex color code.
+func GenRandomHexCode() string {
+	var code string
+	for i := 0; i < 3; i++ {
+		code += fmt.Sprintf("%X", rand.Intn(255))
+	}
+	return code
 }
