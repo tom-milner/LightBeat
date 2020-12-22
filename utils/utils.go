@@ -24,7 +24,8 @@ func GetOutboundIP() net.IP {
 func GenRandomHexCode() string {
 	var code string
 	for i := 0; i < 3; i++ {
-		code += fmt.Sprintf("%X", rand.Intn(255))
+		code += fmt.Sprintf("%02X", rand.Intn(255))
 	}
+	fmt.Println(code)
 	return code
 }
