@@ -26,7 +26,7 @@ func main() { // Setup
 
 	// Connect to MQTT broker
 	broker := iot.MQTTBroker{
-		Address: "192.168.1.137",
+		Address: "raspberrypi.local",
 		Port:    "1883",
 	}
 	info := iot.MQTTConnInfo{
@@ -87,7 +87,6 @@ func run() {
 			if err != nil {
 				continue
 			}
-			spew.Dump(mediaAnalysis)
 			b, _ := json.Marshal(currPlay)
 			go iot.SendMessage(topics.NewMedia, b)
 
@@ -97,7 +96,6 @@ func run() {
 			}
 			b, _ = json.Marshal(mediaFeatures)
 			go iot.SendMessage(topics.MediaFeatures, b)
-			spew.Dump(mediaFeatures)
 
 			go triggerBeats(beatContex, currPlay, mediaAnalysis)
 			isDetecting = true
