@@ -11,12 +11,13 @@ import (
 	"main/spotify"
 	"main/spotify/models"
 	"math"
+	"runtime"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
 )
 
-const enableHardware bool = false
+const enableHardware bool = runtime.GOARCH == "arm"
 
 func main() { // Setup
 
