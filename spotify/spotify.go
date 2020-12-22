@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"main/spotify/credentials"
-	"main/spotify/models"
-	"main/spotify/urls"
-	"main/utils"
+
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/tom-milner/LightBeatGateway/spotify/credentials"
+	"github.com/tom-milner/LightBeatGateway/spotify/models"
+	"github.com/tom-milner/LightBeatGateway/spotify/urls"
+	"github.com/tom-milner/LightBeatGateway/utils"
 )
 
 var spotifyToken models.SpotifyToken

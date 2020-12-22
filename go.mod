@@ -1,4 +1,4 @@
-module main
+module github.com/tom-milner/LightBeatGateway
 
 go 1.15
 

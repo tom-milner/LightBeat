@@ -5,17 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"main/hardware"
-	"main/iot"
-	"main/iot/topics"
-	"main/spotify"
-	"main/spotify/models"
-	"main/utils"
 	"math"
 	"runtime"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/tom-milner/LightBeatGateway/hardware"
+	"github.com/tom-milner/LightBeatGateway/iot"
+	"github.com/tom-milner/LightBeatGateway/iot/topics"
+	"github.com/tom-milner/LightBeatGateway/spotify"
+	"github.com/tom-milner/LightBeatGateway/spotify/models"
+	"github.com/tom-milner/LightBeatGateway/utils"
 )
 
 const enableHardware bool = runtime.GOARCH == "arm"

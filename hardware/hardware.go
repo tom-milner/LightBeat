@@ -1,10 +1,10 @@
 package hardware
 
 import (
-	"main/utils"
 	"time"
 
 	"github.com/ikester/blinkt"
+	"github.com/tom-milner/LightBeatGateway/utils"
 )
 
 var bl blinkt.Blinkt
