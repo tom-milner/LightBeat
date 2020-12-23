@@ -36,14 +36,14 @@ func FlashSequence(color string, fullTime time.Duration, forward bool) {
 
 	for c := 0; c < numPixels; c++ {
 		bl.SetBrightness(0)
-		bl.SetPixelBrightness(i, 1)
+		bl.SetPixelBrightness(i, 0.5)
 		if i == 0 {
-			bl.SetPixelBrightness(1, 0.1)
+			bl.SetPixelBrightness(1, 0.01)
 		} else if i == 7 {
-			bl.SetPixelBrightness(6, 0.1)
+			bl.SetPixelBrightness(6, 0.01)
 		} else {
-			bl.SetPixelBrightness(i+1, 0.1)
-			bl.SetPixelBrightness(i-1, 0.1)
+			bl.SetPixelBrightness(i+1, 0.01)
+			bl.SetPixelBrightness(i-1, 0.01)
 		}
 		bl.Show()
 		time.Sleep(pixelDuration)
