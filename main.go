@@ -17,7 +17,8 @@ import (
 	"github.com/tom-milner/LightBeatGateway/iot/topics"
 	"github.com/tom-milner/LightBeatGateway/spotify"
 	"github.com/tom-milner/LightBeatGateway/spotify/models"
-	"github.com/tom-milner/LightBeatGateway/utils"
+//	"github.com/tom-milner/LightBeatGateway/utils"
+	"github.com/tom-milner/LightBeatGateway/utils/colors"
 )
 
 const enableHardware bool = runtime.GOARCH == "arm"
@@ -178,7 +179,7 @@ func onTrigger(triggerNum int, triggerDuration time.Duration) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
 	go iot.SendMessage(topics.Beat, message)
 	if enableHardware {
-		hardware.FlashSequence(utils.GetRandomColor(), triggerDuration, triggerNum&1 != 0)
+		hardware.FlashSequence(colors.Red, triggerDuration, triggerNum&1 != 0)
 
 	}
 	log.Println(message)

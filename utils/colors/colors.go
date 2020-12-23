@@ -1,9 +1,9 @@
 package colors
 
 const (
-	DeepPurple string = "9A50CC"
-	DeepPink   string = "E768D1"
-	DeepBlue   string = "6E79E0"
+	Red string = "FF00000"
+	Green   string = "00FF00"
+	Blue   string = "0000FF"
 )
 
-var List [3]string = [3]string{DeepBlue, DeepPink, DeepBlue}
+var List [3]string = [3]string{Red,Green,Blue}
