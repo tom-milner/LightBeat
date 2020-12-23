@@ -51,6 +51,10 @@ func makeSpotifyRequest(client *http.Client, req *http.Request) (*http.Response,
 
 	// Make the request.
 	res, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return res, err
+	}
 
 	// Check if we need to refresh the access token.
 	if res.StatusCode == 401 {
