@@ -178,7 +178,7 @@ func onTrigger(triggerNum int, triggerDuration time.Duration) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
 	go iot.SendMessage(topics.Beat, message)
 	if enableHardware {
-		go hardware.FlashSequence(utils.GenRandomHexCode(), triggerDuration, triggerNum^1 != 0)
+		hardware.FlashSequence(utils.GenRandomHexCode(), triggerDuration, triggerNum^1 != 0)
 
 	}
 	log.Println(message)
