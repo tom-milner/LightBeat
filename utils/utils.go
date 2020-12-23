@@ -5,6 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"net"
+
+	"github.com/tom-milner/LightBeatGateway/utils/colors"
 )
 
 // GetOutboundIP returns the preferred outbound ip of this machine
@@ -28,4 +30,8 @@ func GenRandomHexCode() string {
 	}
 	// fmt.Println(code)
 	return code
+}
+
+func GetRandomColor() string {
+	return colors.List[rand.Intn(len(colors.List))]
 }
