@@ -14,13 +14,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tom-milner/LightBeatGateway/spotify/credentials"
 	"github.com/tom-milner/LightBeatGateway/spotify/models"
 	"github.com/tom-milner/LightBeatGateway/spotify/urls"
 	"github.com/tom-milner/LightBeatGateway/utils"
 )
 
+type SpotifyAPICredentials struct {
+	ClientID     string
+	ClientSecret string
+}
+
 var spotifyToken models.SpotifyToken
+var apiCreds SpotifyAPICredentials
 
 // buildAPIRequest returns a request that has the spotify token stored in the params.
 func buildAPIRequest(method string, url string, body io.Reader) (*http.Client, *http.Request, error) {
@@ -197,7 +202,9 @@ func loadRefreshToken(tokenFile string) (string, error) {
 }
 
 // Authorize this layer with the spotify API using OAuth2
-func Authorize(tokenFile string) bool {
+func Authorize(tokenFile string, clientID string, clientSecret string) bool {
+	apiCreds.ClientID = clientID
+	apiCreds.ClientSecret = clientSecret
 	refreshToken, err := loadRefreshToken(tokenFile)
 	if err != nil {
 		log.Println(err)
@@ -240,7 +247,7 @@ func fetchSpotifyTokens(body url.Values) models.SpotifyToken {
 		Timeout: 10 * time.Second,
 	}
 	req, _ := http.NewRequest("POST", urls.NewToken, strings.NewReader(body.Encode()))
-	req.SetBasicAuth(credentials.ClientID, credentials.ClientSecret)
+	req.SetBasicAuth(apiCreds.ClientID, apiCreds.ClientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := makeSpotifyRequest(client, req)
@@ -277,7 +284,7 @@ func fetchAuthCode() (string, string) {
 	redirectURI := serverAddress + "/code"
 	log.Println("Current IP: " + ip)
 	q := u.Query()
-	q.Set("client_id", credentials.ClientID)
+	q.Set("client_id", apiCreds.ClientID)
 	q.Set("response_type", "code")
 	q.Set("redirect_uri", redirectURI)
 	q.Set("scope", "user-modify-playback-state,user-read-currently-playing,user-read-playback-state")

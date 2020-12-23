@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"runtime"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/joho/godotenv"
 	"github.com/tom-milner/LightBeatGateway/hardware"
 	"github.com/tom-milner/LightBeatGateway/iot"
 	"github.com/tom-milner/LightBeatGateway/iot/topics"
@@ -20,11 +22,29 @@ import (
 
 const enableHardware bool = runtime.GOARCH == "arm"
 
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("No .env file found.")
+	}
+
+}
+
 func main() { // Setup
+
+	// Get Environment vars.
+	spotifyClientID, exists := os.LookupEnv("SPOTIFY_CLIENT_ID")
+	if !exists {
+		log.Fatal("Spotify Client ID required.")
+	}
+	spotifyClientSecret, exists := os.LookupEnv("SPOTIFY_CLIENT_SECRET")
+	if !exists {
+		log.Fatal("Spotify Client secret required.")
+	}
+	log.Println("Environment variables loaded successfully.")
 
 	// Authenticate with spotify API.
 	tokenFile := "tokens.json"
-	if !spotify.Authorize(tokenFile) {
+	if !spotify.Authorize(tokenFile, spotifyClientID, spotifyClientSecret) {
 		log.Fatal("Failed to authorize spotify wrapper")
 	}
 
@@ -37,16 +57,17 @@ func main() { // Setup
 		ClientID: "LightBeatGateway",
 		Broker:   broker,
 	}
-
-	// Setup Blinkt.
-	if enableHardware {
-		hardware.SetupLights()
-	}
 	_, err := iot.ConnectToMQTTBroker(info)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Setup Blinkt.
+	if enableHardware {
+		hardware.SetupLights()
+	}
+
+	// Run the main program loop.
 	run()
 }
 

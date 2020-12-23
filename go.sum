@@ -8,6 +8,8 @@ github.com/ikester/blinkt v0.0.0-20170818135857-609ac315477e h1:O2h76TWVlF+cx8+/
 github.com/ikester/blinkt v0.0.0-20170818135857-609ac315477e/go.mod h1:StsCFwtfY/zdpjPy9ZQHllHsJit+4buDZJb3daEjPSk=
 github.com/ikester/gpio v0.0.0-20170408010935-fe62e5880568 h1:r5UUGW+oG/4wKTVJXPM7/xyxGNqgAqJ40SPhhXWAUYQ=
 github.com/ikester/gpio v0.0.0-20170408010935-fe62e5880568/go.mod h1:XgbLhHfNLSBgAYAGhapmYye4reCeCsTHGSSbJ77HSrw=
+github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
+github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 h1:Jcxah/M+oLZ/R4/z5RzfPzGbPXnVDPkEDtf2JnuxN+U=
 golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
