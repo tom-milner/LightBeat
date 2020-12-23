@@ -39,8 +39,8 @@ func FlashSequence(color string, fullTime time.Duration, forward bool) {
 		bl.SetPixelBrightness(i, 1)
 		if i == 0 {
 			bl.SetPixelBrightness(1, 0.5)
-		} else if i == 8 {
-			bl.SetPixelBrightness(7, 0.5)
+		} else if i == 7 {
+			bl.SetPixelBrightness(6, 0.5)
 		} else {
 			bl.SetPixelBrightness(i+1, 0.5)
 			bl.SetPixelBrightness(i-1, 0.5)
