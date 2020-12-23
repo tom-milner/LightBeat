@@ -162,10 +162,10 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:
-			onTrigger(nextTrigger, triggerDuration)
 			nextTrigger++
 			triggerDuration = time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
 			ticker = time.NewTicker(triggerDuration)
+			onTrigger(nextTrigger, triggerDuration)
 		case <-ctx.Done():
 			log.Println("Heard cancel. Exiting")
 			return
@@ -178,7 +178,7 @@ func onTrigger(triggerNum int, triggerDuration time.Duration) {
 	message := fmt.Sprintf("Trigger: %d", triggerNum)
 	go iot.SendMessage(topics.Beat, message)
 	if enableHardware {
-		hardware.FlashSequence(utils.GenRandomHexCode(), triggerDuration, triggerNum^1 != 0)
+		 hardware.FlashSequence(utils.GenRandomHexCode(), triggerDuration, triggerNum&1 != 0)
 
 	}
 	log.Println(message)
