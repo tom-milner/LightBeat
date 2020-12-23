@@ -21,7 +21,7 @@ func FlashLights() {
 
 func FlashSequence(color string, fullTime time.Duration, forward bool) {
 	numPixels := 8
-	pixelDuration := time.Duration(int(fullTime  - 50 * time.Millisecond ) / 8)
+	pixelDuration := time.Duration(int(fullTime-50*time.Millisecond) / 8)
 	bl.SetAll(blinkt.Hex2RGB(color))
 	bl.SetBrightness(0)
 
@@ -35,11 +35,19 @@ func FlashSequence(color string, fullTime time.Duration, forward bool) {
 	}
 
 	for c := 0; c < numPixels; c++ {
+		bl.SetBrightness(0)
 		bl.SetPixelBrightness(i, 1)
+		if i == 0 {
+			bl.SetPixelBrightness(1, 0.5)
+		} else if i == 8 {
+			bl.SetPixelBrightness(7, 0.5)
+		} else {
+			bl.SetPixelBrightness(i+1, 0.5)
+			bl.SetPixelBrightness(i-1, 0.5)
+		}
 		bl.Show()
 		time.Sleep(pixelDuration)
-		bl.SetPixelBrightness(i, 0)
-		bl.Show()
+
 		i += incr
 	}
 }
