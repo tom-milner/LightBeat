@@ -109,9 +109,6 @@ func run() {
 
 		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection {
 			log.Println("Starting")
-			if enableHardware {
-		hardware.ShowLightAnimation()
-	}
 			beatContex, cancel = context.WithCancel(context.Background())
 
 			mediaAnalysis, err := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
@@ -163,7 +160,7 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 
 	triggerDuration := time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
 	ticker := time.NewTicker(triggerDuration)
-	
+
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:
