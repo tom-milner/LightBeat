@@ -1,4 +1,6 @@
-echo "Fetching latest from github..."
+#!/bin/bash
+
+echo "Building latest LightBeatGateway..."
 
 # Stash any changes
 git stash
@@ -7,7 +9,7 @@ git stash
 git pull origin master
 
 # Build Project
-go build 
+/usr/local/go/bin/go build 
 
 # Run!!
 ./LightBeatGateway
