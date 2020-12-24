@@ -17,7 +17,8 @@ import (
 	"github.com/tom-milner/LightBeatGateway/iot/topics"
 	"github.com/tom-milner/LightBeatGateway/spotify"
 	"github.com/tom-milner/LightBeatGateway/spotify/models"
-//	"github.com/tom-milner/LightBeatGateway/utils"
+
+	//	"github.com/tom-milner/LightBeatGateway/utils"
 	"github.com/tom-milner/LightBeatGateway/utils/colors"
 )
 
@@ -160,6 +161,9 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 
 	triggerDuration := time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
 	ticker := time.NewTicker(triggerDuration)
+	if enableHardware {
+		hardware.ShowLightAnimation()
+	}
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:
