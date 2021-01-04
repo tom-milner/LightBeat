@@ -33,15 +33,14 @@ func init() {
 
 func main() { // Setup
 
-	// Get Environment vars.
-	spotifyClientID, exists := os.LookupEnv("SPOTIFY_CLIENT_ID")
-	if !exists {
-		log.Fatal("Spotify Client ID required.")
-	}
-	spotifyClientSecret, exists := os.LookupEnv("SPOTIFY_CLIENT_SECRET")
-	if !exists {
-		log.Fatal("Spotify Client secret required.")
-	}
+	// Get Spotify Environment vars.
+	spotifyClientID := getRequiredEnv("SPOTIFY_CLIENT_ID")
+	spotifyClientSecret := getRequiredEnv("SPOTIFY_CLIENT_SECRET")
+
+	// Get MQTT Environment vars.
+	brokerAddress := getRequiredEnv("MQTT_BROKER_ADDRESS")
+	brokerPort := getRequiredEnv("MQTT_BROKER_PORT")
+
 	log.Println("Environment variables loaded successfully.")
 
 	// Authenticate with spotify API.
@@ -52,8 +51,8 @@ func main() { // Setup
 
 	// Connect to MQTT broker
 	broker := iot.MQTTBroker{
-		Address: "raspberrypi.local",
-		Port:    "1883",
+		Address: brokerAddress,
+		Port:    brokerPort,
 	}
 	info := iot.MQTTConnInfo{
 		ClientID: "LightBeatGateway",
@@ -184,4 +183,12 @@ func onTrigger(triggerNum int, triggerDuration time.Duration) {
 
 	}
 	log.Println(message)
+}
+
+func getRequiredEnv(key string) string {
+	envVar, exists := os.LookupEnv(key)
+	if !exists {
+		log.Fatal(key + " is required.")
+	}
+	return envVar
 }
