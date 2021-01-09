@@ -25,7 +25,7 @@ func FlashLights() {
 
 func FlashSequence(color string, fullTime time.Duration, forward bool) {
 	numPixels := 8
-	pixelDuration := time.Duration(int(fullTime-10*time.Millisecond) / 8)
+	pixelDuration := time.Duration(int(fullTime) / 8)
 	bl.SetAll(blinkt.Hex2RGB(color))
 	bl.SetBrightness(0)
 

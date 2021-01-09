@@ -44,3 +44,8 @@ type timeInterval struct {
 	Start    float64 `json:"start"`    // The start of the interval.
 	Duration float64 `json:"duration"` // The duration of the interval.
 }
+
+type Beat struct {
+	Number   int `json:"number"`
+	Duration int `json:"duration"`
+}

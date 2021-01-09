@@ -138,7 +138,7 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 	fmt.Println(currPlay.Item.Name)
 
 	// Calculate when to show the first beat.
-	triggers := mediaAnalysis.Beats
+	triggers := mediaAnalysis.Bars
 	spew.Dump(triggers[0])
 
 	numTriggers := len(triggers)
@@ -149,7 +149,7 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 
 	for i := 0; i < numTriggers; i++ {
 		// Find the next beat.
-		if progress >= time.Duration(triggers[i].Start*1000)*time.Millisecond {
+		if progress >= time.Duration((triggers[i].Start)*float64(time.Second)) {
 			nextTrigger = i
 		}
 	}
@@ -157,16 +157,17 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 	fmt.Printf("Trigger: %v\n", nextTrigger)
 	fmt.Printf("numTriggers: %v\n", numTriggers)
 
-	triggerDuration := time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
+	triggerDuration := time.Duration((triggers[nextTrigger].Duration) * float64(time.Second))
+	fmt.Println(triggerDuration)
 	ticker := time.NewTicker(triggerDuration)
 
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:
 			nextTrigger++
-			triggerDuration = time.Duration(triggers[nextTrigger].Duration*1000) * time.Millisecond
+			triggerDuration = time.Duration((triggers[nextTrigger].Duration) * float64(time.Second))
 			ticker = time.NewTicker(triggerDuration)
-			onTrigger(nextTrigger, triggerDuration)
+			go onTrigger(nextTrigger, triggerDuration)
 		case <-ctx.Done():
 			log.Println("Heard cancel. Exiting")
 			return
@@ -176,13 +177,20 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 
 // Function to run on every beat.
 func onTrigger(triggerNum int, triggerDuration time.Duration) {
-	message := fmt.Sprintf("Trigger: %d", triggerNum)
+
+	// Generate json payload.
+	info := &models.Beat{
+		Number:   triggerNum,
+		Duration: int(triggerDuration / time.Millisecond),
+	}
+
+	message, _ := json.Marshal(info)
+
 	go iot.SendMessage(topics.Beat, message)
 	if enableHardware {
 		hardware.FlashSequence(colors.Red, triggerDuration, triggerNum&1 != 0)
-
 	}
-	log.Println(message)
+	log.Println(string(message))
 }
 
 func getRequiredEnv(key string) string {
