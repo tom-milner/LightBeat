@@ -95,7 +95,8 @@ func run() {
 		changeInMedia := lastPlaying.Item.ID != currPlay.Item.ID
 
 		// Whether the progress of the media has been changed by more than it should've in the given time interval
-		progressChanged := math.Abs(float64(currPlay.Progress-lastPlaying.Progress)) > float64((tickerInterval/time.Millisecond)+time.Second) // +1 second *just to be sure*L
+		progressDelta := time.Duration(math.Abs(float64(currPlay.Progress - lastPlaying.Progress)))
+		progressChanged := progressDelta > ((tickerInterval + time.Second) / time.Millisecond) // +1 second just to be sure.
 
 		// Whether media is playing, but we aren't running the beat detector.
 		playingWithoutDetection := (!isDetecting && currPlay.IsPlaying)
@@ -150,17 +151,19 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 	for i := 0; i < numTriggers; i++ {
 		// Find the next beat.
 		if progress >= time.Duration((triggers[i].Start)*float64(time.Second)) {
-			nextTrigger = i
+			nextTrigger = i + 1
 		}
 	}
+
+	timeTillStart := time.Duration(triggers[nextTrigger].Start*float64(time.Second)) - progress
 
 	fmt.Printf("Trigger: %v\n", nextTrigger)
 	fmt.Printf("numTriggers: %v\n", numTriggers)
 
+	time.Sleep(timeTillStart)
 	triggerDuration := time.Duration((triggers[nextTrigger].Duration) * float64(time.Second))
 	fmt.Println(triggerDuration)
 	ticker := time.NewTicker(triggerDuration)
-
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:

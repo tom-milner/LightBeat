@@ -2,6 +2,12 @@
 
 echo "Building latest LightBeatGateway..."
 
+# Only allow this to be run on the RaspberryPi.
+if [$(arch) != "arm64"]
+then
+	exit 1
+fi
+
 # Stash any changes
 git stash
 
