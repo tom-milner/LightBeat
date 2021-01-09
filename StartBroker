@@ -1,3 +1,8 @@
 #!/bin/sh
-echo "Starting Mosquitto.."
+
+echo "Local Broker IP:\n"
+
+ifconfig | grep "192"
+
+echo "\nStarting Mosquitto..\n"
 mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf

@@ -138,8 +138,8 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 
 	fmt.Println(currPlay.Item.Name)
 
-	// Calculate when to show the first beat.
-	triggers := mediaAnalysis.Bars
+	// Calculate when to show the first trigger.
+	triggers := mediaAnalysis.Beats
 	spew.Dump(triggers[0])
 
 	numTriggers := len(triggers)
@@ -149,26 +149,24 @@ func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis mode
 	fmt.Printf("Progress: %v\n", progress)
 
 	for i := 0; i < numTriggers; i++ {
-		// Find the next beat.
+		// Find the next trigger.
 		if progress >= time.Duration((triggers[i].Start)*float64(time.Second)) {
 			nextTrigger = i + 1
 		}
 	}
 
-	timeTillStart := time.Duration(triggers[nextTrigger].Start*float64(time.Second)) - progress
+	timeTillNextTrigger := time.Duration(triggers[nextTrigger].Start*float64(time.Second)) - progress
 
 	fmt.Printf("Trigger: %v\n", nextTrigger)
 	fmt.Printf("numTriggers: %v\n", numTriggers)
 
-	time.Sleep(timeTillStart)
-	triggerDuration := time.Duration((triggers[nextTrigger].Duration) * float64(time.Second))
-	fmt.Println(triggerDuration)
-	ticker := time.NewTicker(triggerDuration)
+	fmt.Printf("Time till next trigger: %v\n", timeTillNextTrigger)
+	ticker := time.NewTicker(timeTillNextTrigger)
 	for nextTrigger < numTriggers-1 {
 		select {
 		case <-ticker.C:
 			nextTrigger++
-			triggerDuration = time.Duration((triggers[nextTrigger].Duration) * float64(time.Second))
+			triggerDuration := time.Duration((triggers[nextTrigger].Duration) * float64(time.Second))
 			ticker = time.NewTicker(triggerDuration)
 			go onTrigger(nextTrigger, triggerDuration)
 		case <-ctx.Done():
