@@ -12,13 +12,12 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/joho/godotenv"
+	"github.com/tom-milner/LightBeatGateway/edge"
+	"github.com/tom-milner/LightBeatGateway/edge/topics"
 	"github.com/tom-milner/LightBeatGateway/hardware"
-	"github.com/tom-milner/LightBeatGateway/iot"
-	"github.com/tom-milner/LightBeatGateway/iot/topics"
 	"github.com/tom-milner/LightBeatGateway/spotify"
 	"github.com/tom-milner/LightBeatGateway/spotify/models"
 
-	//	"github.com/tom-milner/LightBeatGateway/utils"
 	"github.com/tom-milner/LightBeatGateway/utils/colors"
 )
 
@@ -40,7 +39,7 @@ func init() {
 
 }
 
-func SetTriggerMessageHandler(msg iot.IOTMessage) {
+func SetTriggerMessageHandler(msg edge.EdgeMessage) {
 	log.Println(msg.Topic())
 	log.Println(msg.Payload())
 	currentTriggerType = TriggerType(msg.Payload())
@@ -65,21 +64,21 @@ func setup() {
 	}
 
 	// Connect to MQTT broker
-	broker := iot.MQTTBroker{
+	broker := edge.MQTTBroker{
 		Address: brokerAddress,
 		Port:    brokerPort,
 	}
-	info := iot.MQTTConnInfo{
+	info := edge.MQTTConnInfo{
 		ClientID: "LightBeatGateway",
 		Broker:   broker,
 	}
-	_, err := iot.ConnectToMQTTBroker(info)
+	_, err := edge.ConnectToMQTTBroker(info)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Subscribe to the relevant topics.
-	iot.OnReceive(topics.SetTrigger, SetTriggerMessageHandler)
+	edge.OnReceive(topics.SetTrigger, SetTriggerMessageHandler)
 
 	// Setup Blinkt.
 	if enableHardware {
@@ -145,14 +144,14 @@ func startSpotifySync() {
 				continue
 			}
 			b, _ := json.Marshal(currPlay)
-			go iot.SendMessage(topics.NewMedia, b)
+			go edge.SendMessage(topics.NewMedia, b)
 
 			mediaFeatures, err := spotify.GetMediaAudioFeatures(currPlay.Item.ID)
 			if err != nil {
 				continue
 			}
 			b, _ = json.Marshal(mediaFeatures)
-			go iot.SendMessage(topics.MediaFeatures, b)
+			go edge.SendMessage(topics.MediaFeatures, b)
 
 			go startTriggerSync(beatContex, currPlay, mediaAnalysis, currentTriggerType)
 			isDetecting = true
@@ -170,10 +169,16 @@ func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis 
 	fmt.Println(currPlay.Item.Name)
 
 	// Calculate when to show the first trigger.
-	triggers := mediaAnalysis.Beats
+
+	var triggers []models.TimeInterval
+	// Use the triggers specified by the user.
 	switch trigger {
 	case Bar:
+		triggers = make([]models.TimeInterval, len(mediaAnalysis.Bars))
 		triggers = mediaAnalysis.Bars
+	case Beat:
+		triggers = make([]models.TimeInterval, len(mediaAnalysis.Beats))
+		triggers = mediaAnalysis.Beats
 	}
 	log.Println(trigger)
 	spew.Dump(triggers)
@@ -223,7 +228,7 @@ func onTrigger(triggerNum int, triggerDuration time.Duration) {
 
 	message, _ := json.Marshal(info)
 
-	go iot.SendMessage(topics.Beat, message)
+	go edge.SendMessage(topics.Beat, message)
 	if enableHardware {
 		hardware.FlashSequence(colors.Red, triggerDuration, triggerNum&1 != 0)
 	}

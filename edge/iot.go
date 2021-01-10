@@ -1,11 +1,11 @@
-// Package iot is for controlling the IOT devices.
-package iot
+// Package edge is for controlling the edge devices.
+package edge
 
 import (
 	"log"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/tom-milner/LightBeatGateway/iot/topics"
+	"github.com/tom-milner/LightBeatGateway/edge/topics"
 )
 
 var client mqtt.Client
@@ -24,8 +24,8 @@ type MQTTBroker struct {
 	Port    string
 }
 
-type IOTMessage mqtt.Message
-type MessageHandler func(IOTMessage)
+type EdgeMessage mqtt.Message
+type MessageHandler func(EdgeMessage)
 
 var messageHandlers map[topics.TopicName]MessageHandler
 
@@ -34,7 +34,7 @@ func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
 	log.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 
 	// Call the correct function for the topic.
-	messageHandlers[topics.TopicName(msg.Topic())](IOTMessage(msg))
+	messageHandlers[topics.TopicName(msg.Topic())](EdgeMessage(msg))
 }
 
 func OnReceive(topic topics.TopicName, handler MessageHandler) {
