@@ -26,9 +26,9 @@ type MediaAudioFeatures struct {
 
 // MediaAudioAnalysis is the model to hold all the track analysis data.
 type MediaAudioAnalysis struct {
-	Beats  []timeInterval `json:"beats"`  // All the beats in track.
-	Bars   []timeInterval `json:"bars"`   // All the bars in the track.
-	Tatums []timeInterval `json:"tatums"` //All the tatums in the track.
+	Beats  []TimeInterval `json:"beats"`  // All the beats in track.
+	Bars   []TimeInterval `json:"bars"`   // All the bars in the track.
+	Tatums []TimeInterval `json:"tatums"` //All the tatums in the track.
 	Track  struct {
 		Duration float64 `json:"duration"` // The duration of the track.
 	} `json:"track"`
@@ -40,7 +40,7 @@ type SpotifyToken struct {
 	Access  string `json:"access_token"`
 }
 
-type timeInterval struct {
+type TimeInterval struct {
 	Start    float64 `json:"start"`    // The start of the interval.
 	Duration float64 `json:"duration"` // The duration of the interval.
 }

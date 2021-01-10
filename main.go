@@ -24,6 +24,15 @@ import (
 
 const enableHardware bool = runtime.GOARCH == "arm"
 
+type TriggerType string
+
+const (
+	Beat TriggerType = "beat"
+	Bar  TriggerType = "bar"
+)
+
+var currentTriggerType = Beat
+
 func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("No .env file found.")
@@ -31,8 +40,14 @@ func init() {
 
 }
 
-func main() { // Setup
+func SetTriggerMessageHandler(msg iot.IOTMessage) {
+	log.Println(msg.Topic())
+	log.Println(msg.Payload())
+	currentTriggerType = TriggerType(msg.Payload())
+}
 
+// Setup all the various libraries/connections.
+func setup() {
 	// Get Spotify Environment vars.
 	spotifyClientID := getRequiredEnv("SPOTIFY_CLIENT_ID")
 	spotifyClientSecret := getRequiredEnv("SPOTIFY_CLIENT_SECRET")
@@ -63,16 +78,22 @@ func main() { // Setup
 		log.Fatal(err)
 	}
 
+	// Subscribe to the relevant topics.
+	iot.OnReceive(topics.SetTrigger, SetTriggerMessageHandler)
+
 	// Setup Blinkt.
 	if enableHardware {
 		hardware.SetupLights()
 	}
-
-	// Run the main program loop.
-	run()
 }
 
-func run() {
+func main() { // Setup
+	setup()
+	startSpotifySync()
+}
+
+//
+func startSpotifySync() {
 	log.Println("Starting ticker")
 	lastPlaying, _ := spotify.GetCurrentlyPlaying()
 	tickerInterval := 2 * time.Second
@@ -81,12 +102,16 @@ func run() {
 	var cancel context.CancelFunc
 	isDetecting := false
 
+	lastTrigger := currentTriggerType
+
 	for {
 		<-ticker.C
 		currPlay, _ := spotify.GetCurrentlyPlaying()
 		if currPlay.Item.ID == "" {
 			continue
 		}
+
+		// TODO: Come up with a better way to detect and react to state changes.
 
 		// Whether the media has stopped or started playing.
 		changeInPlayState := lastPlaying.IsPlaying != currPlay.IsPlaying
@@ -101,13 +126,17 @@ func run() {
 		// Whether media is playing, but we aren't running the beat detector.
 		playingWithoutDetection := (!isDetecting && currPlay.IsPlaying)
 
-		if ((changeInPlayState && !currPlay.IsPlaying) || changeInMedia || progressChanged) && !playingWithoutDetection {
+		// Whether the trigger type has changed.
+		triggerTypeChanged := currentTriggerType != lastTrigger
+
+		// TODO: Refactor these massive if statements!!!!
+		if ((changeInPlayState && !currPlay.IsPlaying) || changeInMedia || progressChanged || (triggerTypeChanged && currPlay.IsPlaying)) && !playingWithoutDetection {
 			log.Println("Stopping")
 			cancel()
 			isDetecting = false
 		}
 
-		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection {
+		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection || (triggerTypeChanged && currPlay.IsPlaying) {
 			log.Println("Starting")
 			beatContex, cancel = context.WithCancel(context.Background())
 
@@ -125,22 +154,29 @@ func run() {
 			b, _ = json.Marshal(mediaFeatures)
 			go iot.SendMessage(topics.MediaFeatures, b)
 
-			go triggerBeats(beatContex, currPlay, mediaAnalysis)
+			go startTriggerSync(beatContex, currPlay, mediaAnalysis, currentTriggerType)
 			isDetecting = true
 		}
 
 		lastPlaying = currPlay
+		lastTrigger = currentTriggerType
 	}
 }
 
-func triggerBeats(ctx context.Context, currPlay models.Media, mediaAnalysis models.MediaAudioAnalysis) {
+// Sync with the Playing spotify data.
+func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis models.MediaAudioAnalysis, trigger TriggerType) {
 	log.Println("Tracking beats.")
 
 	fmt.Println(currPlay.Item.Name)
 
 	// Calculate when to show the first trigger.
 	triggers := mediaAnalysis.Beats
-	spew.Dump(triggers[0])
+	switch trigger {
+	case Bar:
+		triggers = mediaAnalysis.Bars
+	}
+	log.Println(trigger)
+	spew.Dump(triggers)
 
 	numTriggers := len(triggers)
 	var nextTrigger int = 0

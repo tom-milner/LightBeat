@@ -1,7 +1,10 @@
 package topics
 
+type TopicName string
+
 const (
-	Beat          string = "beat"
-	NewMedia      string = "new-media"
-	MediaFeatures string = "media-features"
+	Beat          TopicName = "beat"
+	NewMedia      TopicName = "new-media"
+	MediaFeatures TopicName = "media-features"
+	SetTrigger    TopicName = "set-trigger"
 )
