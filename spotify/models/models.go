@@ -45,7 +45,7 @@ type TimeInterval struct {
 	Duration float64 `json:"duration"` // The duration of the interval.
 }
 
-type Beat struct {
+type Trigger struct {
 	Number   int `json:"number"`
 	Duration int `json:"duration"`
 }

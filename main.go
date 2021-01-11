@@ -97,7 +97,7 @@ func startSpotifySync() {
 	lastPlaying, _ := spotify.GetCurrentlyPlaying()
 	tickerInterval := 2 * time.Second
 	ticker := time.NewTicker(tickerInterval)
-	var beatContex context.Context
+	var triggerContext context.Context
 	var cancel context.CancelFunc
 	isDetecting := false
 
@@ -137,7 +137,7 @@ func startSpotifySync() {
 
 		if ((changeInPlayState && currPlay.IsPlaying) || changeInMedia || progressChanged) || playingWithoutDetection || (triggerTypeChanged && currPlay.IsPlaying) {
 			log.Println("Starting")
-			beatContex, cancel = context.WithCancel(context.Background())
+			triggerContext, cancel = context.WithCancel(context.Background())
 
 			mediaAnalysis, err := spotify.GetMediaAudioAnalysis(currPlay.Item.ID)
 			if err != nil {
@@ -153,7 +153,7 @@ func startSpotifySync() {
 			b, _ = json.Marshal(mediaFeatures)
 			go edge.SendMessage(topics.MediaFeatures, b)
 
-			go startTriggerSync(beatContex, currPlay, mediaAnalysis, currentTriggerType)
+			go startTriggerSync(triggerContext, currPlay, mediaAnalysis, currentTriggerType)
 			isDetecting = true
 		}
 
@@ -164,7 +164,7 @@ func startSpotifySync() {
 
 // Sync with the Playing spotify data.
 func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis models.MediaAudioAnalysis, trigger TriggerType) {
-	log.Println("Tracking beats.")
+	log.Println("Tracking triggers.")
 
 	fmt.Println(currPlay.Item.Name)
 
@@ -221,14 +221,14 @@ func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis 
 func onTrigger(triggerNum int, triggerDuration time.Duration) {
 
 	// Generate json payload.
-	info := &models.Beat{
+	info := &models.Trigger{
 		Number:   triggerNum,
 		Duration: int(triggerDuration / time.Millisecond),
 	}
 
 	message, _ := json.Marshal(info)
 
-	go edge.SendMessage(topics.Beat, message)
+	go edge.SendMessage(topics.Trigger, message)
 	if enableHardware {
 		hardware.FlashSequence(colors.Red, triggerDuration, triggerNum&1 != 0)
 	}
