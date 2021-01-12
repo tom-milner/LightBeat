@@ -167,6 +167,9 @@ func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis 
 	log.Println("Tracking triggers.")
 
 	fmt.Println(currPlay.Item.Name)
+	spew.Dump((mediaAnalysis.Beats))
+	spew.Dump((mediaAnalysis.Bars))
+	log.Printf("Trigger: %s", trigger)
 
 	// Calculate when to show the first trigger.
 
@@ -177,7 +180,9 @@ func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis 
 		triggers = make([]models.TimeInterval, len(mediaAnalysis.Bars))
 		triggers = mediaAnalysis.Bars
 	case Beat:
+		fallthrough
 	default:
+		log.Println("Using beat as trigger")
 		triggers = make([]models.TimeInterval, len(mediaAnalysis.Beats))
 		triggers = mediaAnalysis.Beats
 	}
@@ -196,7 +201,7 @@ func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis 
 			nextTrigger = i + 1
 		}
 	}
-
+	log.Printf("Next Trigger: %d", nextTrigger)
 	timeTillNextTrigger := time.Duration(triggers[nextTrigger].Start*float64(time.Second)) - progress
 
 	fmt.Printf("Trigger: %v\n", nextTrigger)
