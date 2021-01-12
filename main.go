@@ -177,6 +177,7 @@ func startTriggerSync(ctx context.Context, currPlay models.Media, mediaAnalysis 
 		triggers = make([]models.TimeInterval, len(mediaAnalysis.Bars))
 		triggers = mediaAnalysis.Bars
 	case Beat:
+	default:
 		triggers = make([]models.TimeInterval, len(mediaAnalysis.Beats))
 		triggers = mediaAnalysis.Beats
 	}
