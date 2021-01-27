@@ -1,0 +1,2 @@
+#! /bin/sh
+mosquitto_sub -v -h 192.168.1.131 -p 1883 -t '#'

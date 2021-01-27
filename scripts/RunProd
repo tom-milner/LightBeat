@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "Building latest LightBeatGateway..."
+
+# Only allow this to be run on the RaspberryPi.
+if [ $(arch) != "arm64" ]
+then
+	echo "Wrong architecture detected. Exiting."
+	exit 1
+fi
+
+# Stash any changes
+git stash
+
+# Get latest from github
+git pull origin master
+
+# Build Project
+/usr/local/go/bin/go build 
+
+# Run!!
+./LightBeatGateway
+
+
